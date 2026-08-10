@@ -653,7 +653,7 @@ class TestBanditInlineSuppression:
         assert finding.suppressed is True
 
     def test_bare_marker_on_line_above_suppresses(self, tmp_path: Path) -> None:
-        source = "# velonus: ignore\nPASSWORD = \"hunter2\"\n"
+        source = '# velonus: ignore\nPASSWORD = "hunter2"\n'
         finding = self._parse_one(tmp_path, source)
         assert finding.suppressed is True
 

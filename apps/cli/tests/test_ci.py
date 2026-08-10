@@ -84,15 +84,11 @@ def test_generate_workflow_prompts_before_overwrite(
     dest.write_text("old content", encoding="utf-8")
     monkeypatch.setattr(ci, "client_from_config", lambda: _fake_client())
 
-    declined = runner.invoke(
-        ci.app, ["--generate-workflow", "--output", str(dest)], input="n\n"
-    )
+    declined = runner.invoke(ci.app, ["--generate-workflow", "--output", str(dest)], input="n\n")
     assert declined.exit_code == 0
     assert dest.read_text(encoding="utf-8") == "old content"
 
-    accepted = runner.invoke(
-        ci.app, ["--generate-workflow", "--output", str(dest)], input="y\n"
-    )
+    accepted = runner.invoke(ci.app, ["--generate-workflow", "--output", str(dest)], input="y\n")
     assert accepted.exit_code == 0
     assert dest.read_text(encoding="utf-8") == "name: Velonus\n"
 

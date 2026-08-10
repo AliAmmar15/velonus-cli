@@ -627,8 +627,7 @@ def scan(
         unknown = set(selected_detectors) - ALL_DETECTORS
         if unknown:
             raise typer.BadParameter(
-                f"Unknown detector(s): {sorted(unknown)}. "
-                f"Valid options: {sorted(ALL_DETECTORS)}",
+                f"Unknown detector(s): {sorted(unknown)}. Valid options: {sorted(ALL_DETECTORS)}",
                 param_hint="--detectors",
             )
 
@@ -663,7 +662,8 @@ def scan(
         "safety": "Safety",
     }
     _TOOL_LABELS: list[tuple[str, str]] = [
-        (key, _ALL_TOOL_LABELS[key]) for key in ("secrets", "bandit", "semgrep", "pip-audit", "safety")
+        (key, _ALL_TOOL_LABELS[key])
+        for key in ("secrets", "bandit", "semgrep", "pip-audit", "safety")
         if key in _enabled_tools
     ]
 
