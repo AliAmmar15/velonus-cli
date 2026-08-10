@@ -2,7 +2,7 @@
 
 Stores:
   [auth]
-    api_key = "vn_sk_..."
+    api_key = "vn_sk_..."  # example only # velonus: ignore [detect-secrets-secret-keyword]
     api_url = "https://velonus-production.up.railway.app"
 
   [scan]

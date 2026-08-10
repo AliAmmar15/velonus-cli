@@ -390,10 +390,7 @@ class ScanPipeline:
             List of RawFinding from the detector (may be empty).
         """
         t0 = time.perf_counter()
-        # mypy sees two `scanner` namespaces (outer stub at packages/scanner/ and
-        # inner package at packages/scanner/scanner/) and reports RawFinding type
-        # mismatch at runtime both resolve to the same class via the editable finder.
-        findings: list[RawFinding] = await asyncio.to_thread(runner.scan, target)  # type: ignore[arg-type]
+        findings: list[RawFinding] = await asyncio.to_thread(runner.scan, target)
         elapsed = time.perf_counter() - t0
         self._log_timing(name, len(findings), elapsed, verbose)
         if on_tool_done:

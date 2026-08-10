@@ -17,3 +17,8 @@ normalizer = "."
 
 [tool.setuptools]
 packages = ["normalizer"]
+
+# py.typed (PEP 561) marks this package as fully typed so consumers like
+# packages/scanner get real types instead of implicit Any under mypy.
+[tool.setuptools.package-data]
+normalizer = ["py.typed"]

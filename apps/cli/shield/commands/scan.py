@@ -656,7 +656,7 @@ def scan(
     # show four rows stuck at "waiting..." forever.
     _enabled_tools = selected_detectors if selected_detectors is not None else sorted(ALL_DETECTORS)
     _ALL_TOOL_LABELS: dict[str, str] = {
-        "secrets": "Secrets",
+        "secrets": "Secrets",  # velonus: ignore [detect-secrets-secret-keyword]
         "bandit": "Bandit",
         "semgrep": "Semgrep",
         "pip-audit": "pip-audit",
@@ -701,9 +701,16 @@ def scan(
 
     # Filter by minimum severity — applied before all output formats.
     # Dict lookup instead of list.index() avoids ValueError on unexpected severity values.
+    # Also drops findings suppressed via inline `# velonus: ignore` markers — the
+    # local CLI has no dashboard-style "dimmed but visible" concept, so a
+    # suppressed finding here means fully excluded from output and the CI gate.
     sev_order = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
     min_idx = sev_order.get(min_severity.lower(), 0)
-    filtered = [f for f in findings if sev_order.get(f.severity.value.lower(), 0) >= min_idx]
+    filtered = [
+        f
+        for f in findings
+        if sev_order.get(f.severity.value.lower(), 0) >= min_idx and not f.suppressed
+    ]
 
     if output_format == OutputFormat.terminal:
         render_findings_table(filtered, target=str(target), console=console)

@@ -156,7 +156,7 @@ class VelonusClient:
     def upload_scan(
         self,
         target_path: str,
-        findings: list[object],
+        findings: Sequence[object],
         exclude_patterns: list[str] | None = None,
         source_contexts: dict[str, str] | None = None,
     ) -> dict[str, object]:

@@ -20,6 +20,7 @@ target-version = "py312"
 select = ["E", "F", "I", "UP", "B", "SIM", "TCH"]
 ignore = [
     "E501",   # line too long — enforced by formatter
+    "B008",   # typer.Option()/typer.Argument() in function defaults is the standard Typer pattern
 ]
 
 [tool.mypy]

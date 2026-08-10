@@ -21,6 +21,10 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages = ["scanner", "scanner.detectors"]
 
+# py.typed (PEP 561) marks this package as fully typed under mypy.
+[tool.setuptools.package-data]
+scanner = ["py.typed"]
+
 [tool.mypy]
 strict = true
 python_version = "3.12"

@@ -65,14 +65,14 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --dev
 
-      - name: Run mypy (strict) — CLI
-        run: uv run mypy apps/cli/shield --strict --ignore-missing-imports
-
-      - name: Run mypy (strict) — scanner
-        run: uv run mypy packages/scanner/scanner --strict --ignore-missing-imports
-
-      - name: Run mypy (strict) — normalizer
-        run: uv run mypy packages/normalizer --strict --ignore-missing-imports
+      - name: Run mypy (strict)
+        # Checked together, not as three separate invocations: normalizer and
+        # scanner don't ship a py.typed marker through editable installs (a
+        # known setuptools editable-install limitation — package_data isn't
+        # linked in compat mode), so checking them in isolation makes mypy
+        # treat cross-package imports as untyped Any instead of resolving the
+        # real types. One combined run analyzes all three as source directly.
+        run: uv run mypy apps/cli/shield packages/scanner/scanner packages/normalizer --strict --ignore-missing-imports
 
   test:
     name: Test (pytest + smoke)

@@ -1,1 +1,0 @@
-"""Velonus scanner pipeline package."""
