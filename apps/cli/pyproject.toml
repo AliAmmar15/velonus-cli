@@ -1,0 +1,91 @@
+# Velonus CLI package configuration.
+# Published to PyPI as `velonus` — install with: pip install velonus
+# Entry point: `velonus` command maps to shield.main:app
+
+[project]
+name = "velonus"
+version = "1.0.0a7"
+description = "AI-native security copilot for Python developers"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Ali Ammar" }]
+keywords = [
+    "security",
+    "appsec",
+    "sast",
+    "devsecops",
+    "python",
+    "semgrep",
+    "bandit",
+    "vulnerability-scanner",
+    "secret-detection",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Security",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "typer>=0.12.0",          # CLI framework — locked, do not swap for click directly
+    "click>=8.1.0,<8.2.0",   # Pinned: click 8.2+ removes Choice.__class_getitem__, breaking typer on Python 3.13. Also satisfies semgrep's click~=8.1.8 constraint.
+    "rich>=13.7.0",           # Terminal output — tables, spinners, color
+    "httpx>=0.27.0",          # Async HTTP client for API calls (Phase 2+)
+    "bandit>=1.7.0",          # Python AST static analysis — required scanner tool
+    "pip-audit>=2.7.0",       # Dependency CVE audit (PyPI/OSV) — required scanner tool
+    "safety>=3.0.0",          # Dependency vulnerability DB (Safety DB) — required scanner tool
+]
+
+[project.optional-dependencies]
+# semgrep is large (~200 MB) and not required for basic scanning.
+# Install with: pip install velonus[semgrep]
+semgrep = [
+    "semgrep>=1.0.0",
+]
+# detect-secrets is optional for enhanced secret detection (fallback entropy-based detection is built-in).
+# Install with: pip install velonus[detect-secrets]
+detect-secrets = [
+    "detect-secrets>=1.4.0",
+]
+
+[project.scripts]
+velonus = "shield.main:app"
+
+[project.urls]
+homepage = "https://github.com/AliAmmar15/velonus-cli"
+repository = "https://github.com/AliAmmar15/velonus-cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.4.0",            # Replaces black + isort + flake8 — do NOT add those
+    "mypy>=1.10.0",           # Strict type checking
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["shield"]
+
+# Bundle the monorepo-internal scanner and normalizer packages into the
+# velonus wheel so that `pip install velonus` is fully self-contained.
+# Neither package is published to PyPI — they must travel with the CLI.
+# force-include maps paths relative to this pyproject.toml (apps/cli/)
+# to their destination layout inside the built wheel / site-packages.
+[tool.hatch.build.targets.wheel.force-include]
+# Paths are resolved relative to the directory containing pyproject.toml
+# (apps/cli/). Hatchling resolves force-include before copying to the build
+# temp dir, so absolute-like relative paths must reach back into the monorepo.
+"../../packages/scanner/scanner" = "scanner"
+"../../packages/normalizer/__init__.py" = "normalizer/__init__.py"
+"../../packages/normalizer/models.py" = "normalizer/models.py"
+"../../packages/normalizer/normalizer.py" = "normalizer/normalizer.py"
+"../../packages/normalizer/deduplicator.py" = "normalizer/deduplicator.py"
+
+[tool.mypy]
+strict = true
+python_version = "3.12"

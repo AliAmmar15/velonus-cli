@@ -1,0 +1,56 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build and publish velonus to PyPI
+    runs-on: ubuntu-latest
+    environment: pypi
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    permissions:
+      contents: write  # required to upload GitHub Release artifacts
+      id-token: write  # required for trusted publishing (OIDC)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Build wheel
+        working-directory: apps/cli
+        # Build wheel directly from source, NOT via sdist.
+        # force-include paths (../../packages/scanner, ../../packages/normalizer)
+        # are relative to the source tree and would break if hatchling tried
+        # to resolve them inside an extracted sdist temp directory.
+        run: uv build --wheel
+
+      # Publishes via PyPI Trusted Publisher (OIDC) — no API token required.
+      # Configure at: https://pypi.org/manage/project/velonus/settings/publishing/
+      # PyPI project: velonus | Owner: AliAmmar15 | Repo: velonus-cli
+      # Workflow: publish.yml | Environment: pypi
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+
+      - name: Upload build artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true

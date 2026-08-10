@@ -1,0 +1,28 @@
+# Root uv workspace configuration for the Velonus CLI repo.
+# This repo holds the open-source scanner core: the CLI, the scan pipeline
+# (packages/scanner), and finding normalization/dedup (packages/normalizer).
+# The AI engine, GitHub App integration, API backend, and web dashboard are
+# proprietary and live in a separate private repo.
+# Using uv workspaces — do NOT use pip or poetry to manage dependencies.
+
+[tool.uv.workspace]
+members = [
+    "apps/cli",
+    "packages/scanner",
+    "packages/normalizer",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "TCH"]
+ignore = [
+    "E501",   # line too long — enforced by formatter
+]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+ignore_missing_imports = false

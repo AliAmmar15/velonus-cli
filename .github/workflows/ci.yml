@@ -1,0 +1,126 @@
+# Velonus CLI — CI Pipeline
+# Runs on every push to main and every pull request targeting main.
+#
+# All three jobs (lint, typecheck, test) MUST pass before a PR can be merged.
+# Enable branch protection on main requiring: lint, typecheck, test
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Check linting (ruff check)
+        run: uv run ruff check .
+
+      - name: Check formatting (ruff format)
+        run: uv run ruff format --check .
+
+  typecheck:
+    name: Type check (mypy)
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run mypy (strict) — CLI
+        run: uv run mypy apps/cli/shield --strict --ignore-missing-imports
+
+      - name: Run mypy (strict) — scanner
+        run: uv run mypy packages/scanner/scanner --strict --ignore-missing-imports
+
+      - name: Run mypy (strict) — normalizer
+        run: uv run mypy packages/normalizer --strict --ignore-missing-imports
+
+  test:
+    name: Test (pytest + smoke)
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        # --all-extras installs optional dependency groups (semgrep, detect-secrets).
+        # apps/cli and packages/scanner/normalizer are installed as editable
+        # workspace packages.
+        run: uv sync --all-extras --dev
+
+      - name: Install shield-scanner (editable)
+        # packages/scanner is a setuptools package outside the uv workspace graph.
+        # Install it explicitly so scanner.detectors.* is importable in tests.
+        run: uv run pip install -e packages/scanner
+
+      - name: Run CLI tests
+        run: uv run pytest apps/cli/tests/ -v --tb=short
+
+      - name: Smoke test — velonus scan CLI
+        # Verifies the CLI entry point, Rich output, SARIF writer, and entropy
+        # fallback all work end-to-end on a clean directory. Exit code must be 0.
+        run: |
+          uv run velonus scan ./apps/cli/shield --sarif -o /tmp/ci-smoke.sarif
+          grep -q '"version": "2.1.0"' /tmp/ci-smoke.sarif
+          echo "Smoke test passed."
+
+      - name: Upload SARIF to GitHub Security tab
+        if: ${{ hashFiles('/tmp/ci-smoke.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@v4
+        continue-on-error: true
+        with:
+          sarif_file: /tmp/ci-smoke.sarif
+
+permissions:
+  contents: read
+  security-events: write
