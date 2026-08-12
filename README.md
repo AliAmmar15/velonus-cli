@@ -7,7 +7,7 @@
 > AI-native application security scanner for developers.
 > Finds real issues. Explains why they matter. Generates fixes.
 
-This repo is the **open-source scanner core** of [Velonus](https://velonus.io):
+This repo is the **open-source scanner core** of [Velonus](https://velonus.com):
 the CLI, the scan pipeline (`packages/scanner`), and finding
 normalization/deduplication (`packages/normalizer`). Running `velonus scan`
 locally never sends your code anywhere — it's fully self-contained.
